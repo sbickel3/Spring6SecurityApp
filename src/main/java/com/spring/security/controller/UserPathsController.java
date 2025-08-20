@@ -15,26 +15,21 @@ public class UserPathsController {
 	@ResponseBody
     @GetMapping(value = "/welcome", produces = "application/json")
     public Map<String, String> welcomePage() {
-        return Map.of("message", "Welcome to the Home Page. Please Choose to Login as a User or an Admin");
+        return Map.of("message", "Welcome to the Home Page!");
     }
     
 	@ResponseBody
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @GetMapping(value = "/user", produces = "application/json")
-    public Map<String, String> userLogin() {
+    public Map<String, String> getUserData() {
         return Map.of("message", "User Login Successful");
     } 
     
 	@ResponseBody
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/admin", produces = "application/json")
-    public Map<String, String> adminLogin() {
+    public Map<String, String> getAdminData() {
         return Map.of("message", "Admin Login Successful");
-    }
-	
-   @GetMapping("/logout-success")
-    public String logoutSuccessPage() {
-        return "logout-success"; // Return the logout-success.html page
     }
     
 }

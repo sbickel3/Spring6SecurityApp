@@ -23,7 +23,7 @@ public class UserPathsControllerTest {
    public void setup(WebApplicationContext wac) {
         this.mockMvc = MockMvcBuilders
         				.webAppContextSetup(wac)
-        				.apply(SecurityMockMvcConfigurers.springSecurity())
+        				.apply(SecurityMockMvcConfigurers.springSecurity()) // ensures TestSecurityContextHolder is used
         				.build();
     }
 	 
@@ -32,7 +32,7 @@ public class UserPathsControllerTest {
         mockMvc.perform(get("/welcome"))
                .andExpect(status().isOk())
                .andExpect(content().contentType("application/json"))
-               .andExpect(content().string("{\"message\":\"Welcome to the Home Page. Please Choose to Login as a User or an Admin\"}"));
+               .andExpect(content().string("{\"message\":\"Welcome to the Home Page!\"}"));
   }
   
   @Test
@@ -54,17 +54,16 @@ public class UserPathsControllerTest {
   }
   
   @Test
-  @WithMockUser(roles = { "MANAGER" })
+  @WithMockUser(roles = { "TEST_ROLE" })
   public void testUserLogin_InvalidRole() throws Exception {
       mockMvc.perform(get("/user"))
              .andExpect(status().isForbidden());
   }
   
   @Test
-  @WithMockUser(roles = { "USER" })
-  public void testAdminLogin_InvalidRole() throws Exception {
-      mockMvc.perform(get("/admin"))
-             .andExpect(status().isForbidden());
+  public void testUserLogin_Unauthenticated() throws Exception {
+      mockMvc.perform(get("/user"))
+             .andExpect(status().isUnauthorized());
   }
   
   @Test
@@ -77,10 +76,15 @@ public class UserPathsControllerTest {
   }
   
   @Test
-  public void testLogoutSuccessPage() throws Exception {
-      mockMvc.perform(get("/logout-success"))
-	      .andExpect(status().isOk())
-	      .andExpect(content().contentType("text/html;charset=ISO-8859-1"));
+  @WithMockUser(roles = { "USER" })
+  public void testAdminLogin_InvalidRole() throws Exception {
+      mockMvc.perform(get("/admin"))
+             .andExpect(status().isForbidden());
   }
-
+  
+  @Test
+  public void testAdminLogin_Unauthenticated() throws Exception {
+      mockMvc.perform(get("/admin"))
+             .andExpect(status().isUnauthorized());
+  }
 }
