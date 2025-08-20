@@ -1,6 +1,6 @@
 package com.spring.security.controller;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
@@ -17,18 +17,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 public class UserPathsControllerTest {
 
-	private MockMvc mockMvc;
+	private static MockMvc mockMvc;
 	
-	@BeforeEach
-   public void setup(WebApplicationContext wac) {
-        this.mockMvc = MockMvcBuilders
+	@BeforeAll
+   public static void setup(WebApplicationContext wac) {
+        mockMvc = MockMvcBuilders
         				.webAppContextSetup(wac)
         				.apply(SecurityMockMvcConfigurers.springSecurity()) // ensures TestSecurityContextHolder is used
         				.build();
     }
 	 
   @Test
-   public void testWelcomePage() throws Exception {
+  @WithMockUser(roles = { "ADMIN" })
+   public void testWelcomePage_AdminRole() throws Exception {
         mockMvc.perform(get("/welcome"))
                .andExpect(status().isOk())
                .andExpect(content().contentType("application/json"))
@@ -37,7 +38,31 @@ public class UserPathsControllerTest {
   
   @Test
   @WithMockUser(roles = { "USER" })
-  public void testUserLogin() throws Exception {
+   public void testWelcomePage_UserRole() throws Exception {
+        mockMvc.perform(get("/welcome"))
+               .andExpect(status().isOk())
+               .andExpect(content().contentType("application/json"))
+               .andExpect(content().string("{\"message\":\"Welcome to the Home Page!\"}"));
+  }
+  
+  @Test
+  @WithMockUser(roles = { "TEST" })
+   public void testWelcomePage_TestRole() throws Exception {
+        mockMvc.perform(get("/welcome"))
+               .andExpect(status().isOk())
+               .andExpect(content().contentType("application/json"))
+               .andExpect(content().string("{\"message\":\"Welcome to the Home Page!\"}"));
+  }
+  
+  @Test
+   public void testWelcomePage_Unauthenticated() throws Exception {
+        mockMvc.perform(get("/welcome"))
+        	   .andExpect(status().isUnauthorized());
+  }
+  
+  @Test
+  @WithMockUser(roles = { "USER" })
+  public void testGetUserData() throws Exception {
       mockMvc.perform(get("/user"))
              .andExpect(status().isOk())
              .andExpect(content().contentType("application/json"))
@@ -46,7 +71,7 @@ public class UserPathsControllerTest {
   
   @Test
   @WithMockUser(roles = { "ADMIN" })
-  public void testUserLogin_Admin() throws Exception {
+  public void testGetUserData_Admin() throws Exception {
       mockMvc.perform(get("/user"))
              .andExpect(status().isOk())
              .andExpect(content().contentType("application/json"))
@@ -54,21 +79,21 @@ public class UserPathsControllerTest {
   }
   
   @Test
-  @WithMockUser(roles = { "TEST_ROLE" })
-  public void testUserLogin_InvalidRole() throws Exception {
+  @WithMockUser(roles = { "TEST" })
+  public void testGetUserData_InvalidRole() throws Exception {
       mockMvc.perform(get("/user"))
              .andExpect(status().isForbidden());
   }
   
   @Test
-  public void testUserLogin_Unauthenticated() throws Exception {
+  public void testGetUserData_Unauthenticated() throws Exception {
       mockMvc.perform(get("/user"))
              .andExpect(status().isUnauthorized());
   }
   
   @Test
   @WithMockUser(roles = { "ADMIN" })
-  public void testAdminLogin() throws Exception {
+  public void testGetAdminData() throws Exception {
       mockMvc.perform(get("/admin"))
 	      .andExpect(status().isOk())
 	      .andExpect(content().contentType("application/json"))
@@ -77,13 +102,13 @@ public class UserPathsControllerTest {
   
   @Test
   @WithMockUser(roles = { "USER" })
-  public void testAdminLogin_InvalidRole() throws Exception {
+  public void testGetAdminData_InvalidRole() throws Exception {
       mockMvc.perform(get("/admin"))
              .andExpect(status().isForbidden());
   }
   
   @Test
-  public void testAdminLogin_Unauthenticated() throws Exception {
+  public void testGetAdminData_Unauthenticated() throws Exception {
       mockMvc.perform(get("/admin"))
              .andExpect(status().isUnauthorized());
   }
